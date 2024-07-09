@@ -70,7 +70,8 @@ dfA = pd.read_csv(sys.path[0] + "/DP Table S3.csv", delimiter=',')
 dfC = pd.read_csv(sys.path[0] + "/DP Table S4.csv", delimiter=',')
 dfB = dfC[dfC['fits'] == "y"]
 
-
+# Print out the average composition of modern seawater
+print(f"Modern seawater average values: {dfsw['d18O'].mean():.2f}‰ and {dfsw['Dp17O'].mean():.0f} ppm")
 
 ############################ Figure 4 ############################
 all_temperatures = []
@@ -134,27 +135,21 @@ if np.max(all_temps) > np.max(bins) or np.min(all_temps) < np.min(bins):
     print("The histogram bin range is too narrow. Increase the bin size!")
     sys.exit()
 
+ax1.text(32.5, 1500, "all dolomites",
+         ha='left', va='center', color='k',
+         bbox=dict(fc='w', pad=1.2, lw=1, alpha=0.5, ec='k'))
 
-# add arrows to ax1.text(84, max(n), "all dolomites", ha="right", va="top") from 5,20
-ax1.annotate("all dolomites",
-             xy=(22.5, max(n1)-50),
-             xytext=(40, max(n1)-50),
-             ha = "left", va = "center", color='k',
-             arrowprops=dict(arrowstyle="-|>", lw=0.5, color='k'))
-ax1.annotate("highest-$\delta^{18}$O dolomites",
-             xy=(17.5, max(n2)-50),
-             xytext=(40, max(n1)-250),
-             ha = "left", va = "center", color='k',
-             arrowprops=dict(arrowstyle="-|>", lw=0.5, color='k'))
-
-
+ax1.text(22.5, 300, "highest-$\delta^{18}$O\ndolomites",
+         ha='left', va='center', color='k',
+         bbox=dict(fc='w', pad=1.2, lw=1, alpha=0.5, ec='#1455C0'))
 
 ax1.set_xlabel('Calculated seawater temperatures (°C)')
 ax1.set_ylabel('# of estimates')
 ax1.yaxis.set_ticks([])
 ax1.set_xticks(np.arange(10, 90, 10))
 
-plt.savefig(sys.path[0] + '/DP Figure 4.png', bbox_inches='tight')
+plt.savefig(sys.path[0] + '/DP Figure 4.png', bbox_inches='tight', dpi = 1200)
+plt.close()
 
 
 
@@ -219,7 +214,7 @@ ax2.scatter(dfB['sum_distance'], dfB['Dp17Osw'],
             label="best-fit to dolomites")
 
 # Cut-off lines
-cutoff = 36.222
+cutoff = 36.168
 ax2.axvline(x=cutoff, color='k', linestyle='--', lw=0.5)
 ax2.axhline(y=20, color='k', linestyle='--', lw=0.5)
 
@@ -230,7 +225,6 @@ ax2.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
 ax2.text(0.98, 0.98, "b", size=14, ha="right", va="top", transform=ax2.transAxes, fontweight="bold", bbox=dict(facecolor='w', pad=0.2, lw = 0, alpha=0.5))
 
 plt.savefig(sys.path[0] + '/DP Figure S2.png', bbox_inches='tight')
-
 plt.close()
 
 
@@ -248,11 +242,11 @@ ax.scatter(prime(dfB['d18Osw']), dfB['Dp17Osw'],
               label="best-fit")
 
 ax.scatter(prime(-0.24), -17.4,
-           marker="*", fc = "k", ec="w", s=100,
+           marker="*", fc="k", ec="w", s=100,
            label="steady state")
 ax.scatter(prime(d18O_median), Dp17O_median,
-              marker="*", fc = "w", ec="k", 
-              label="median best-fit")
+           marker="*", fc="w", ec="k", s=100,
+           label="median best-fit")
 
 curlyBrace(fig, ax, [max(dfB['d18Osw']), min(dfB['Dp17Osw'])-1], [min(dfB['d18Osw']), min(dfB['Dp17Osw'])-1],
            0.1, str_text="best-fit\ncompositions", int_line_num=2.5, color='k', lw=1)
@@ -366,5 +360,4 @@ def plot_fluxes(df, filename):
     print('Figure "' + filename +'" saved')
     plt.close()
 
-# plot_fluxes(dfA, 'DP Figure S4')
 plot_fluxes(dfB, 'DP Figure 3')

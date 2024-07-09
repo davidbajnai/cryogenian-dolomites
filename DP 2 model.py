@@ -298,7 +298,7 @@ print(f"Modern steady state: d18O = {mss[0]:.2f}, Dp17O = {Dp17O(mss[1], mss[0])
 
 
 # Run Monte Carlo simulation
-simulation_results = monte_carlo_simulation(150000)
+simulation_results = monte_carlo_simulation(200000)
 simulation_results['Dp17Osw'] = Dp17O(simulation_results['d17Osw'], simulation_results['d18Osw'])
 simulation_results.to_csv(sys.path[0] + '/DP Table S3.csv', index=False)
 

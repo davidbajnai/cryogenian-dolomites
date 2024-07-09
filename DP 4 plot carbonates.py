@@ -92,7 +92,7 @@ def plot_dolomite_equilibrium(Dp17Osw, d18Osw, Tmin, Tmax, ax, color="k"):
     d17Ow = unprime(0.528 * prime(d18Osw) + Dp17Osw / 1000)
 
     ax.scatter(prime(d18Osw), Dp17O(d17Ow, d18Osw),
-               marker="*", fc="w", ec="k", zorder=10)
+               marker="*", fc="w", ec="k", zorder=10, s=100)
 
     # equilibrium, highlight range
     equilibrium_temperatures = np.arange(Tmin, Tmax, 0.5) + 273.15
@@ -149,11 +149,9 @@ def plot_calcite_equilibrium(Dp17Osw, d18Osw, Tmin, Tmax, ax, color="k"):
 
 # Read in data
 data = pd.read_csv(sys.path[0] + "/DP Table S2.csv", sep=",")
-data["Dp17O_error"] = 7
+data["Dp17O_error"] = 9
 modelwater = pd.read_csv(sys.path[0] + "/DP Table S4.csv")
 modelwater = modelwater[modelwater["fits"] == "y"]
-
-modelwater = modelwater.sort_values(by="avg_temperature")
 
 # Start plotting
 fig, ax1 = plt.subplots(1, 1)
@@ -245,7 +243,7 @@ data["Mineralogy"] = data["Mineralogy"].replace("calcite", "limestone")
 cat_col = (data[colName].unique())
 colors = dict(zip(cat_col, plt.cm.Wistia(
     np.linspace(0, 1, len(cat_col)))))
-markName = "Phase"
+markName = "Mineralogy"
 cat_mark = data[markName].unique()
 markers = dict(zip(cat_mark, ["o", "s", "s", "D", "^", "v", "P", "X"]))
 
@@ -258,10 +256,17 @@ for col in cat_col:
             ax1.errorbar(prime(dat["d18O_AC"]), dat["Dp17O_AC"],
                          xerr=dat["d18O_error"], yerr=dat["Dp17O_error"],
                          fmt="none", color=colors[col])
+            # Indicate sample names
             # for i, txt in enumerate(dat["SampleName"]):
             #         ax1.annotate(txt, (prime(dat["d18O_AC"].iloc[i]), dat["Dp17O_AC"].iloc[i]),
             #                     xytext=(prime(dat["d18O_AC"].iloc[i]) + 0, dat["Dp17O_AC"].iloc[i] + 0),
             #                     ha="center", va="center", color="k", fontsize=2, zorder=11)
+
+# Mark samples AQ24 and Z_MC with an asterisk
+for i, txt in enumerate(data["SampleName"]):
+    if txt == "AQ24" or txt == "Z_MC":
+        ax1.scatter(prime(data["d18O_AC"].iloc[i]), data["Dp17O_AC"].iloc[i],
+                    marker="$*$", fc="w", ec="none", zorder=10)
 
 # Plot error bar
 d18O_error = data["d18O_error"].mean()
