@@ -2,12 +2,15 @@
 # Figure 2b, Figure 3, Figure 4, Figure S2, Figure S4
 
 # Import libraries
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import pandas as pd
 from curlyBrace import curlyBrace
 from tqdm import tqdm
+
+# Import functions
 from functions import *
 
 # Plot parameters
@@ -17,7 +20,6 @@ plt.rcParams["patch.linewidth"] = 0.5
 plt.rcParams['lines.linewidth'] = 0.5
 plt.rcParams["savefig.dpi"] = 800
 plt.rcParams["savefig.bbox"] = "tight"
-
 
 # Define additional functions
 def a18_carb(T):
@@ -148,7 +150,7 @@ ax1.set_ylabel('# of estimates')
 ax1.yaxis.set_ticks([])
 ax1.set_xticks(np.arange(10, 90, 10))
 
-plt.savefig(sys.path[0] + '/DP Figure 4.png', bbox_inches='tight', dpi = 1200)
+plt.savefig(os.path.join(sys.path[0], "DP Figure 4"))
 plt.close()
 
 
@@ -224,9 +226,8 @@ ax2.set_xlabel('Cumulative distances')
 ax2.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
 ax2.text(0.98, 0.98, "b", size=14, ha="right", va="top", transform=ax2.transAxes, fontweight="bold", bbox=dict(facecolor='w', pad=0.2, lw = 0, alpha=0.5))
 
-plt.savefig(sys.path[0] + '/DP Figure S2.png', bbox_inches='tight')
+plt.savefig(os.path.join(sys.path[0], "DP Figure S2"))
 plt.close()
-
 
 
 ############################ Figure 2b ############################
@@ -267,7 +268,7 @@ ax.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
 ax.text(0.98, 0.98, "b", size=14, ha="right", va="top",
         transform=ax.transAxes, fontweight="bold")
 
-plt.savefig(sys.path[0] + '/DP Figure 2b.png', bbox_inches='tight')
+plt.savefig(os.path.join(sys.path[0], "DP Figure 2b"))
 print('Figure "DP Figure 2b" saved')
 plt.close()
 
@@ -356,7 +357,7 @@ def plot_fluxes(df, filename):
     # make ax6 empty
     ax6.axis('off')
 
-    plt.savefig(sys.path[0] + '/' + filename + '.png', bbox_inches='tight')
+    plt.savefig(os.path.join(sys.path[0], filename))
     print('Figure "' + filename +'" saved')
     plt.close()
 

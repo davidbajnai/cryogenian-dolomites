@@ -1,4 +1,5 @@
 # Import libraries
+import os
 import sys
 import pandas as pd
 import numpy as np
@@ -286,5 +287,5 @@ ax1.set_xlim(-15, 45)
 ax1.text(0.98, 0.98, "a", size=14, ha="right", va="top",
         transform=ax1.transAxes, fontweight="bold")
 
-plt.savefig(sys.path[0] + "/DP Figure 2a.png")
+plt.savefig(os.path.join(sys.path[0], "DP Figure 2a"))
 plt.close("all")

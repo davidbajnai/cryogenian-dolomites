@@ -1,12 +1,12 @@
 # The following code is used to
 # model seawater oxygen isotope compositions based on the extended Muehlenbachs model.
+
 # To change the fluxes, change the factors in the code starting in line 113.
 
 # input: DP Table S3.csv, DP all modelled sw.csv
 
 # Import libraries
 import numpy as np
-import pprint
 from scipy.optimize import fsolve
 import warnings
 from tqdm import tqdm
