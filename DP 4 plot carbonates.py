@@ -1,3 +1,13 @@
+# This code is used to:
+# Plot the data in triple oxygen isotope space
+
+# INPUT:  DP Table S2.csv (carbonate data)
+#         DP Table S4.csv (best-fit compositions)
+
+# OUTPUT: DP Figure 2a.png
+
+# >>>>>>>>>
+
 # Import libraries
 import os
 import sys
@@ -14,6 +24,8 @@ plt.rcParams["patch.linewidth"] = 0.5
 plt.rcParams['lines.linewidth'] = 0.5
 plt.rcParams["savefig.dpi"] = 800
 plt.rcParams["savefig.bbox"] = "tight"
+plt.rcParams['savefig.transparent'] = False
+plt.rcParams['mathtext.default'] = 'regular'
 
 # Define additional functions
 def a18cal(T):
@@ -149,9 +161,9 @@ def plot_calcite_equilibrium(Dp17Osw, d18Osw, Tmin, Tmax, ax, color="k"):
 
 
 # Read in data
-data = pd.read_csv(sys.path[0] + "/DP Table S2.csv", sep=",")
+data = pd.read_csv(os.path.join(sys.path[0], "DP Table S2.csv"))
 data["Dp17O_error"] = 9
-modelwater = pd.read_csv(sys.path[0] + "/DP Table S4.csv")
+modelwater = pd.read_csv(os.path.join(sys.path[0], "DP Table S4.csv"))
 modelwater = modelwater[modelwater["fits"] == "y"]
 
 # Start plotting
@@ -190,9 +202,10 @@ curlyBrace(fig, ax1, [df_eq_dol.iloc[-1,0], df_eq_dol.iloc[-1,1]+4], [df_eq_dol.
 
 curlyBrace(fig, ax1, [max(modelwater['d18Osw'])+2, max(modelwater['Dp17Osw'])], [max(modelwater['d18Osw'])+2, min(modelwater['Dp17Osw'])],
            0.1,  str_text="", int_line_num=4, color='k')
+
 # ax1.text at the median
 ax1.text(max(modelwater['d18Osw'])+5, (max(modelwater['Dp17Osw'])+min(modelwater['Dp17Osw']))/2,
-            "seawater\n(see also in "+ r"$\bf{b}$)", va="center", ha="left", color="k")
+         "seawater\n(see also in " + r"$\bf{b}$)", va="center", ha="left", color="k")
 
 
 # Meteoric alteration
@@ -279,13 +292,12 @@ for mark, col in zip(cat_mark, cat_col):
 ax1.legend(loc='lower left')
 
 # Axis properties
-ax1.set_xlabel("$\delta^{\prime 18}$O (‰, VSMOW)")
-ax1.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
 ax1.set_ylim(-105, 5)
 ax1.set_xlim(-15, 45)
-
+ax1.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW)")
+ax1.set_ylabel("$\Delta\prime^{17}$O (ppm)")
 ax1.text(0.98, 0.98, "a", size=14, ha="right", va="top",
-        transform=ax1.transAxes, fontweight="bold")
+         transform=ax1.transAxes, fontweight="bold")
 
 plt.savefig(os.path.join(sys.path[0], "DP Figure 2a"))
-plt.close("all")
+plt.close()

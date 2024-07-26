@@ -1,11 +1,23 @@
-# This code is used to create:
-# Figure 2b, Figure 3, Figure 4, Figure S2, Figure S4
+# This code is used to:
+# Plot the results of the seawater oxygen isotope model
+
+# INPUT:  DP Table S2.csv (carbonate data)
+#         DP Table S3.csv (modelled seawater compositions)
+#         DP Table S4.csv (best-fit compositions)
+#         seawater.csv (modern seawater data)
+
+# OUTPUT: DP Figure 2b.png
+#         DP Figure 3.png
+#         DP Figure 4.png
+#         DP Figure S2.png
+
+# >>>>>>>>>
 
 # Import libraries
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 import pandas as pd
 from curlyBrace import curlyBrace
 from tqdm import tqdm
@@ -20,6 +32,8 @@ plt.rcParams["patch.linewidth"] = 0.5
 plt.rcParams['lines.linewidth'] = 0.5
 plt.rcParams["savefig.dpi"] = 800
 plt.rcParams["savefig.bbox"] = "tight"
+plt.rcParams['savefig.transparent'] = False
+plt.rcParams['mathtext.default'] = 'regular'
 
 # Define additional functions
 def a18_carb(T):
@@ -65,11 +79,11 @@ def d17O_carb(equilibrium_temperatures, d18Osw):
 
 
 # Read data from the files
-dfsw = pd.read_csv(sys.path[0] + "/seawater.csv", delimiter=',')
-dfcarb = pd.read_csv(sys.path[0] + "/DP Table S2.csv", delimiter=',')
+dfsw = pd.read_csv(os.path.join(sys.path[0], "seawater.csv"))
+dfcarb = pd.read_csv(os.path.join(sys.path[0], "DP Table S2.csv"))
 dfcarb = dfcarb[dfcarb["Mineralogy"] == "dolomite"]
-dfA = pd.read_csv(sys.path[0] + "/DP Table S3.csv", delimiter=',')
-dfC = pd.read_csv(sys.path[0] + "/DP Table S4.csv", delimiter=',')
+dfA = pd.read_csv(os.path.join(sys.path[0], "DP Table S3.csv"))
+dfC = pd.read_csv(os.path.join(sys.path[0], "DP Table S4.csv"))
 dfB = dfC[dfC['fits'] == "y"]
 
 # Print out the average composition of modern seawater
@@ -152,7 +166,7 @@ ax1.set_xticks(np.arange(10, 90, 10))
 
 plt.savefig(os.path.join(sys.path[0], "DP Figure 4"))
 plt.close()
-
+print('Figure "DP Figure 4" saved')
 
 
 ############################ Figure S2 ############################
@@ -165,7 +179,9 @@ d18O_median = dfB.loc[index, "d18Osw"]
 Dp17O_median = dfB.loc[index, "Dp17Osw"]
 d17O_median = d17O(d18O_median, Dp17O_median)
 
-print(f"Among the best-fit seawater compositions, the two end-members have δ18Osw and ∆17Osw values of {min(dfB['d18Osw']):.0f}‰ and {max(dfB['Dp17Osw']):.0f} ppm and {max(dfB['d18Osw']):.0f}‰ and {min(dfB['Dp17Osw']):.0f} ppm,\nrespectively, with median values of {d18O_median:.0f}‰ and {Dp17O_median:.0f} ppm")
+print("\n")
+print(f"Among the best-fit seawater compositions, the two end-members have δ18Osw and ∆17Osw values of {min(dfB['d18Osw']):.0f}‰ and {max(dfB['Dp17Osw']):.0f} ppm and {max(dfB['d18Osw']):.0f}‰ and {min(dfB['Dp17Osw']):.0f} ppm, respectively, with median values of {d18O_median:.0f}‰ and {Dp17O_median:.0f} ppm")
+print("\n")
 
 ax1.scatter(prime(d18O_median), Dp17O_median,
             marker="o", c="#347DE0",
@@ -200,12 +216,15 @@ for i, row in dfcarb.iterrows():
              bbox=dict(facecolor='w', pad=0.2, lw=0, alpha=0.5))
 
 ax1.plot(0,0, c = '#DB0078', label = "Euclidean distance")
+
 ax1.legend(loc="lower left")
 
-ax1.set_xlabel("$\delta^{\prime 18}$O (‰, VSMOW)")
-ax1.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
+# Axis properties
 ax1.set_xlim(-6, 36)
-ax1.text(0.98, 0.98, "a", size=14, ha="right", va="top", transform=ax1.transAxes, fontweight="bold")
+ax1.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW)")
+ax1.set_ylabel("$\Delta\prime^{17}$O (ppm)")
+ax1.text(0.98, 0.98, "a", size=14, ha="right", va="top",
+         transform=ax1.transAxes, fontweight="bold")
 
 # Subplot b
 ax2.scatter(dfC['sum_distance'], dfC['Dp17Osw'],
@@ -222,12 +241,16 @@ ax2.axhline(y=20, color='k', linestyle='--', lw=0.5)
 
 ax2.legend(loc="lower right")
 
+# Axis properties
 ax2.set_xlabel('Cumulative distances')
-ax2.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
-ax2.text(0.98, 0.98, "b", size=14, ha="right", va="top", transform=ax2.transAxes, fontweight="bold", bbox=dict(facecolor='w', pad=0.2, lw = 0, alpha=0.5))
+ax2.set_ylabel("$\Delta\prime^{17}$O (ppm)")
+ax2.text(0.02, 0.98, "b", size=14, ha="left", va="top",
+         transform=ax2.transAxes, fontweight="bold",
+         bbox=dict(facecolor='w', pad=0.2, lw=0, alpha=0.5))
 
 plt.savefig(os.path.join(sys.path[0], "DP Figure S2"))
 plt.close()
+print('Figure "DP Figure S2" saved')
 
 
 ############################ Figure 2b ############################
@@ -258,65 +281,64 @@ curlyBrace(fig, ax, [min(dfA['d18Osw']), max(dfA['Dp17Osw'])+1], [max(dfA['d18Os
 curlyBrace(fig, ax, [min(dfsw['d18O']), max(dfsw['Dp17O'])+2], [max(dfsw['d18O']), max(dfsw['Dp17O'])+2],
            0.1,  str_text="modern\nseawater", int_line_num=3, color='k', lw=1)
 
-
+# Axis properties
 ax.set_xlim(-9.5, 5.5)
 ax.set_ylim(-35, 75)
-
-ax.set_xlabel("$\delta^{\prime 18}$O (‰, VSMOW)")
-ax.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
-
-ax.text(0.98, 0.98, "b", size=14, ha="right", va="top",
+ax.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW)")
+ax.set_ylabel("$\Delta\prime^{17}$O (ppm)")
+ax.text(0.02, 0.98, "b", size=14, ha="left", va="top",
         transform=ax.transAxes, fontweight="bold")
 
 plt.savefig(os.path.join(sys.path[0], "DP Figure 2b"))
-print('Figure "DP Figure 2b" saved')
 plt.close()
-
+print('Figure "DP Figure 2b" saved')
 
 
 def plot_fluxes(df, filename):
     _, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3, 2, figsize=(9.5, 9.5), constrained_layout=True)
 
     sc = ax1.scatter(prime(df['d18Osw']), df['Dp17Osw'],
-                marker=".", c=df['F_sp'], cmap='viridis', alpha=0.5)
+                     marker=".", c=df['F_sp'], cmap='viridis', alpha=0.5)
     cbar = plt.colorbar(sc, ax=ax1)
-    cbar.set_label('$F_{sp}$ (18.3x10$^{15}$ g yr$^{-1}$)')
+    cbar.set_label('$\it{F_{sp}}$ (18.3x10$^{15}$ g yr$^{-1}$)')
     cbar.ax.yaxis.set_label_position('right')
     ax1.text(0.98, 0.98, "a", size=14, ha="right", va="top",
-            transform=ax1.transAxes, fontweight="bold")
-    
+             transform=ax1.transAxes, fontweight="bold")
+
     sc = ax2.scatter(prime(df['d18Osw']), df['Dp17Osw'],
-                marker=".", c=df['F_cw'], cmap='viridis', alpha=0.5)
+                     marker=".", c=df['F_cw'], cmap='viridis', alpha=0.5)
     cbar = plt.colorbar(sc, ax=ax2)
-    cbar.set_label('$F_{cw}$ (10x10$^{15}$ g yr$^{-1}$)')
+    cbar.set_label('$\it{F_{cw}}$ (10x10$^{15}$ g yr$^{-1}$)')
     cbar.ax.yaxis.set_label_position('right')
     ax2.text(0.98, 0.98, "b", size=14, ha="right", va="top",
-            transform=ax2.transAxes, fontweight="bold")
+             transform=ax2.transAxes, fontweight="bold")
 
     sc = ax3.scatter(prime(df['d18Osw']), df['Dp17Osw'],
-                marker=".", c=df['F_sfw'], cmap='viridis', alpha=0.5)
+                     marker=".", c=df['F_sfw'], cmap='viridis', alpha=0.5)
     cbar = plt.colorbar(sc, ax=ax3)
-    cbar.set_label('$F_{sfw}$ (2.2x10$^{15}$ g yr$^{-1}$)')
+    cbar.set_label('$\it{F_{sfw}}$ (2.2x10$^{15}$ g yr$^{-1}$)')
     cbar.ax.yaxis.set_label_position('right')
     ax3.text(0.98, 0.98, "c", size=14, ha="right", va="top",
-            transform=ax3.transAxes, fontweight="bold")
+             transform=ax3.transAxes, fontweight="bold")
 
     sc = ax4.scatter(prime(df['d18Osw']), df['Dp17Osw'],
-                marker=".", c=df['F_c'], cmap='viridis', alpha=0.5)
+                     marker=".", c=df['F_c'], cmap='viridis', alpha=0.5)
     cbar = plt.colorbar(sc, ax=ax4)
-    cbar.set_label('$F_{carb}$ and $F_{SiO_2}$ (0.077x10$^{15}$ g yr$^{-1}$)')
+    cbar.set_label('$\it{F_{carb}}$ and $F_{SiO_2}$ (0.077x10$^{15}$ g yr$^{-1}$)')
     cbar.ax.yaxis.set_label_position('right')
     ax4.text(0.98, 0.98, "d", size=14, ha="right", va="top",
-            transform=ax4.transAxes, fontweight="bold")
+             transform=ax4.transAxes, fontweight="bold")
 
-
+    # Axis properties
     axes_list = [ax1, ax2, ax3, ax4]
     for ax in axes_list:
-        ax.set_xlabel("$\delta^{\prime 18}$O (‰, VSMOW)")
-        ax.set_ylabel("$\Delta^{\prime 17}$O (ppm)")
+        ax.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW)")
+        ax.set_ylabel("$\Delta\prime^{17}$O (ppm)")
 
 
-    # Calcualte median factors
+    # Subplot e - Fluxes
+
+    # Calcualte median flux-multiplying factors
     filtered_columns = [col for col in df.columns if "F_" in col and "F_qz" not in col]
     results = df.loc[:, filtered_columns].median()
     factors = results.tolist()
@@ -324,13 +346,9 @@ def plot_fluxes(df, filename):
     fluxes_names = ['F$_{sp}$', 'F$_{sfw}$', 'F$_{cw}$', 'F$_{cg}$', 'F$_r$', "F$_{carb}$ & F$_{SiO_2}$"]
     fluxes_times_factors = [flux * factor for flux, factor in zip(fluxes, factors)]
 
-    # Set log scale for both axes
+    # Set the axis scale
     ax5.set_xscale('log')
     ax5.set_yscale('log')
-
-    # Add a 1:1 line
-    x = np.logspace(-2, 2, 100)
-    ax5.plot(x, x, c="#9C9A8E", ls = '--', zorder = -1)
 
     # Plot the points
     ax5.scatter(fluxes, fluxes_times_factors,
@@ -347,18 +365,22 @@ def plot_fluxes(df, filename):
                  xy=(0.35, 0.35), xycoords='axes fraction', xytext=(0.24, 0.5), textcoords='axes fraction',
                  arrowprops=dict(arrowstyle="<|-", lw = 3, color = "k"), ha='center', va='center')
 
-    # Set labels and title
+    # Add a 1:1 line
+    x = np.logspace(-2, 2, 100)
+    ax5.plot(x, x, c="#9C9A8E", ls = '--', zorder = -1)
+
+    # Axis properties
     ax5.set_xlabel('Modern fluxes (10$^{15}$ g yr$^{-1}$)')
     ax5.set_ylabel('Median of modelled fluxes (10$^{15}$ g yr$^{-1}$)')
     ax5.text(0.98, 0.98, "e", size=14, ha="right", va="top",
-            transform=ax5.transAxes, fontweight="bold")
+             transform=ax5.transAxes, fontweight="bold",
+             bbox=dict(facecolor='w', pad=0.2, lw=0, alpha=0.5))
 
-
-    # make ax6 empty
+    # Leave ax6 empty
     ax6.axis('off')
 
     plt.savefig(os.path.join(sys.path[0], filename))
-    print('Figure "' + filename +'" saved')
     plt.close()
+    print('Figure "' + filename +'" saved')
 
 plot_fluxes(dfB, 'DP Figure 3')

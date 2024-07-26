@@ -1,18 +1,25 @@
-# The following code is used to
-# scale the TILDAS data based on the accepted values for the reference gases
+# This code is used to:
+# Scale the TILDAS data based on the accepted values for the reference gases
 
-# INPUT: DP Table S2.csv (replicate data), DP Table 2.csv (sample info)
-# OUTPUT: DP Figure S1.png, OH2 Figure S2.png, DP Table S3.csv
+# INPUT:  DP Table S2.csv (replicate data)
+#         DP Table 2.csv (sample info)
+
+# OUTPUT: DP Figure S1a.png
+#         DP Figure S1b.png
+#         DP Figure S1cd.png
+#         DP Table S3.csv (scaled and averaged data)
 
 # >>>>>>>>>
 
 # Import libraries
 import sys
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from functions import *
 
+# Import functions
+from functions import *
 
 # Plot parameters
 plt.rcParams.update({'font.size': 7})
@@ -23,7 +30,8 @@ plt.rcParams["patch.linewidth"] = 0.5
 plt.rcParams["figure.figsize"] = (9, 4)
 plt.rcParams["savefig.dpi"] = 800
 plt.rcParams["savefig.bbox"] = "tight"
-
+plt.rcParams['savefig.transparent'] = False
+plt.rcParams['mathtext.default'] = 'regular'
 
 # Define additional functions
 def print_info(df, d18O_col, Dp17O_col, sample_name):
@@ -138,14 +146,17 @@ def scaleData(df, project):
                              yerr=group["Dp17OError"],
                              fmt="none", color="#cacaca", zorder=0)
         
-        plt.title(f"Measurement period: {period}")
-        plt.ylabel("$\Delta^{\prime 17}$O (ppm, unscaled CO$_2$)")
-        plt.xlabel("Measurement date")
         plt.legend(loc='upper right', bbox_to_anchor=(1.15, 1))
-        plt.text(0.98, 0.98, SuppFig[FigNum], size=14, ha="right", va="top",
-                 transform=ax.transAxes, fontweight="bold")
 
-        plt.savefig(sys.path[0] + "/" + f"{project} Figure S1{SuppFig[FigNum]}.png", bbox_inches='tight')
+        plt.title(f"Measurement period: {period}")
+
+        # Axis properties
+        ax.set_ylabel("$\Delta^{\prime 17}$O (ppm, unscaled CO$_2$)")
+        ax.set_xlabel("Measurement date")
+        ax.text(0.02, 0.98, SuppFig[FigNum], size=14, ha="left", va="top",
+                transform=ax.transAxes, fontweight="bold")
+
+        plt.savefig(os.path.join(sys.path[0], f"{project} Figure S1{SuppFig[FigNum]}"))
         plt.close()
 
         # Exclude the standards from the exported dataframe
@@ -178,14 +189,14 @@ def average_data(df):
 # Here we go!
 
 # Scale the data
-df = scaleData(pd.read_csv(sys.path[0] + "/DP Table S1.csv"), "DP")
+df = scaleData(pd.read_csv(os.path.join(sys.path[0], "DP Table S1.csv")), "DP")
 
 # Average the data
 df_avg = average_data(df)
 
 
 # Merge data with sample info
-info = pd.read_csv(sys.path[0] + "/DP Table 2.csv")
+info = pd.read_csv(os.path.join(sys.path[0], "DP Table 2.csv"))
 df_avg = df_avg.merge(info, on='SampleName')
 
 # Apply acid fractionation correction
@@ -197,11 +208,12 @@ df_avg[["d18O_AC", "d17O_AC", "Dp17O_AC"]] = df_avg.apply(lambda x: applyAFF(x["
 # print(df_avg.round({"Dp17O_CO2": 0, "Dp17O_error": 0, "Dp17O_AC": 0}).round(3))
 
 # Assign sample info and export CSV
-df_avg.to_csv(sys.path[0] + "/DP Table S2.csv", index=False)
-df_avg.to_excel(sys.path[0] + "/DP Table S2.xlsx", index=False)
+df_avg.to_csv(os.path.join(sys.path[0], "DP Table S2.csv"), index=False)
+df_avg.to_excel(os.path.join(sys.path[0], "DP Table S2.xlsx"), index=False)
 
-# Create an additional supplementary figure
-# that shows all scaled replicate data and the averages
+
+################ Create Figure S1 c-d ############
+fig, (ax1, ax2) = plt.subplots(1, 2)
 
 # Assign colors and markers to samples
 df.sort_values(by="SampleName", inplace=True)
@@ -211,42 +223,44 @@ markers = dict(zip(categories, ["o", "s", "D", "^", "v", "X", "P", "*", "o",
 colors = dict(zip(categories, plt.cm.tab20(np.linspace(0, 1, len(categories)))))
 
 
-# Subplot A: scaled sample replicates
-plt.figure(figsize=(9, 4))
-ax1 = plt.subplot(1, 2, 1)
-
+# Subplot a: scaled sample replicates
 for cat in categories:
     data = df[df["SampleName"] == cat]
     ax1.scatter(prime(data["d18O_scaled"]), data["Dp17O_scaled"],
                 marker=markers[cat], fc=colors[cat], label=cat)
-    plt.errorbar(prime(df["d18O_scaled"]), df["Dp17O_scaled"],
+    ax1.errorbar(prime(df["d18O_scaled"]), df["Dp17O_scaled"],
                  yerr=df["Dp17OError"],
                  xerr=df["d18OError"],
                  fmt="none", color="#cacaca", zorder=0)
 
-plt.text(0.08, 0.98, "c", size=14, ha="right", va="top",
+
+# Axis properties
+ylim = ax1.get_ylim()
+xlim = ax1.get_xlim()
+ax1.set_ylabel("$\Delta^{\prime 17}$O (ppm, CO$_2$)")
+ax1.set_xlabel("$\delta^{\prime 18}$O (‰, VSMOW, CO$_2$)")
+ax1.text(0.02, 0.98, "c", size=14, ha="left", va="top",
          transform=ax1.transAxes, fontweight="bold")
-plt.ylabel("$\Delta^{\prime 17}$O (ppm, CO$_2$)")
-plt.xlabel("$\delta^{\prime 18}$O (‰, VSMOW, CO$_2$)")
 
 # Subplot B: scaled sample averages
-ax2 = plt.subplot(1, 2, 2, sharey=ax1, sharex=ax1)
-
 for cat in categories:
     data = df_avg[df_avg["SampleName"] == cat]
     ax2.scatter(prime(data["d18O_CO2"]), data["Dp17O_CO2"],
                 marker=markers[cat], fc=colors[cat], label=cat)
-    plt.errorbar(prime(df_avg["d18O_CO2"]), df_avg["Dp17O_CO2"],
+    ax2.errorbar(prime(df_avg["d18O_CO2"]), df_avg["Dp17O_CO2"],
                  yerr=df_avg["Dp17O_error"],
                  xerr=df_avg["d18O_error"],
                  fmt="none", color="#cacaca", zorder=0)
 
-plt.text(0.08, 0.98, "d", size=14, ha="right", va="top",
-         transform=ax2.transAxes, fontweight="bold")
-plt.ylabel("$\Delta^{\prime 17}$O (ppm, CO$_2$)")
-plt.xlabel("$\delta^{\prime 18}$O (‰, VSMOW, CO$_2$)")
-
 plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1))
 
-plt.savefig(sys.path[0] + "/" + "DP Figure S1cd.png", bbox_inches='tight')
+# Axis properties
+ax2.set_ylim(ylim)
+ax2.set_xlim(xlim)
+ax2.set_ylabel("$\Delta\prime^{17}$O (ppm, CO$_2$)")
+ax2.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW, CO$_2$)")
+ax2.text(0.02, 0.98, "d", size=14, ha="left", va="top",
+         transform=ax2.transAxes, fontweight="bold")
+
+plt.savefig(os.path.join(sys.path[0], "DP Figure S1cd"))
 plt.close()

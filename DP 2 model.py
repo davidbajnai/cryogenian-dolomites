@@ -1,17 +1,23 @@
-# The following code is used to
-# model seawater oxygen isotope compositions based on the extended Muehlenbachs model.
+# This code is used to:
+# Model seawater oxygen isotope compositions based on the extended Muehlenbachs model
 
-# To change the fluxes, change the factors in the code starting in line 113.
+# INPUT:  DP Table S2.csv (carbonate data)
 
-# input: DP Table S3.csv, DP all modelled sw.csv
+# OUTPUT: DP Table S3.csv (modelled seawater compositions)
+#         DP Table S4.csv (best-fit compositions)
+
+# >>>>>>>>>
 
 # Import libraries
+import sys
+import os
 import numpy as np
 from scipy.optimize import fsolve
 import warnings
 from tqdm import tqdm
-import sys
 import pandas as pd
+
+# Import functions
 from functions import *
 
 # Suppress runtime warnings
@@ -300,9 +306,9 @@ print(f"Modern steady state: d18O = {mss[0]:.2f}, Dp17O = {Dp17O(mss[1], mss[0])
 # Run Monte Carlo simulation
 simulation_results = monte_carlo_simulation(200000)
 simulation_results['Dp17Osw'] = Dp17O(simulation_results['d17Osw'], simulation_results['d18Osw'])
-simulation_results.to_csv(sys.path[0] + '/DP Table S3.csv', index=False)
+simulation_results.to_csv(os.path.join(sys.path[0], 'DP Table S3.csv'), index=False)
 
-print("Seawater modelling complete!\n")
+print("Monte-carlo sewater modelling complete!\n")
 
 
 ############################################################################################################
@@ -331,7 +337,7 @@ def theta_c(T):
 
 
 # Read calcite data from CSV file
-carbonates = pd.read_csv(sys.path[0] + "/DP Table S2.csv", sep=",")
+carbonates = pd.read_csv(os.path.join(sys.path[0], "DP Table S2.csv"))
 carbonates = carbonates.rename(columns={"d18O_AC": "d18O", "d17O_AC": "d17O", "Dp17O_AC": "Dp17O"})
 
 # Filter data
@@ -340,7 +346,6 @@ carbonates = carbonates[carbonates["Mineralogy"] == "dolomite"]
 # Read in possible seawater compositions from CSV file
 all_fluids = simulation_results
 all_fluids = all_fluids[all_fluids["Dp17Osw"] <= 20]
-# all_fluids = all_fluids.sample(n=1000) # Randomly sample n fluids to speed up the process
 
 # Initialize lists to store calculated values
 sum_distances = []
@@ -392,6 +397,6 @@ all_fluids["max_temperature"] = max_temperatures
 sum_distance_cutoff = all_fluids['sum_distance'].quantile(0.01)
 print(f"Cut-off value for sum_distance: {sum_distance_cutoff:.3f}")
 all_fluids['fits'] = np.where(all_fluids["sum_distance"] <= sum_distance_cutoff, 'y', 'n')
-all_fluids.to_csv(sys.path[0] + '/DP Table S4.csv', index=False)
+all_fluids.to_csv(os.path.join(sys.path[0], 'DP Table S4.csv'), index=False)
 
-print("Carbonate modelling complete!")
+print("Obtaining best-fit compositions complete!")
