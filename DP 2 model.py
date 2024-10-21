@@ -1,29 +1,26 @@
 # This code is used to:
 # Model seawater oxygen isotope compositions based on the extended Muehlenbachs model
 
-# INPUT:  DP Table S2.csv (carbonate data)
+# INPUT:    DP Table S2.csv (carbonate data)
 
-# OUTPUT: DP Table S3.csv (modelled seawater compositions)
-#         DP Table S4.csv (best-fit compositions)
+# OUTPUT:   DP Table S3.csv (modelled seawater compositions)
+#           DP Table S4.csv (best-fit compositions)
 
 # >>>>>>>>>
 
 # Import libraries
-import sys
 import os
+import sys
 import numpy as np
 from scipy.optimize import fsolve
 import warnings
 from tqdm import tqdm
 import pandas as pd
-
-# Import functions
 from functions import *
-
-# Suppress runtime warnings
 warnings.filterwarnings("ignore")
 
-# Define additional functions
+# Define  functions
+
 def a18c(T):
 
     # Daeron et al. (2019) - calcite

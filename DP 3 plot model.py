@@ -21,8 +21,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from curlyBrace import curlyBrace
 from tqdm import tqdm
-
-# Import functions
 from functions import *
 
 # Plot parameters
@@ -340,23 +338,29 @@ def plot_fluxes(df, filename):
 
     # Calcualte median flux-multiplying factors
     filtered_columns = [col for col in df.columns if "F_" in col and "F_qz" not in col]
-    results = df.loc[:, filtered_columns].median()
-    factors = results.tolist()
+    min_factors = df.loc[:, filtered_columns].min().tolist()
+    median_factors = df.loc[:, filtered_columns].median().tolist()
+    max_factors = df.loc[:, filtered_columns].max().tolist()
     fluxes = [18.3, 2.2, 10, 1.5, 0.8, 0.0768]
     fluxes_names = ['F$_{sp}$', 'F$_{sfw}$', 'F$_{cw}$', 'F$_{cg}$', 'F$_r$', "F$_{carb}$ & F$_{SiO_2}$"]
-    fluxes_times_factors = [flux * factor for flux, factor in zip(fluxes, factors)]
+    fluxes_times_median_factors = [flux * factor for flux, factor in zip(fluxes, median_factors)]
+    fluxes_times_max_factors = [flux * factor for flux, factor in zip(fluxes, max_factors)]
+    fluxes_times_min_factors = [flux * factor for flux, factor in zip(fluxes, min_factors)]
 
     # Set the axis scale
     ax5.set_xscale('log')
     ax5.set_yscale('log')
 
     # Plot the points
-    ax5.scatter(fluxes, fluxes_times_factors,
-                marker="o", fc='#1455C0', ec = "k")
+    ax5.errorbar(fluxes, fluxes_times_median_factors,
+                 yerr=[fluxes_times_min_factors, fluxes_times_max_factors],
+                 fmt='none', ecolor='#1455C0', elinewidth = 1)
+    ax5.scatter(fluxes, fluxes_times_median_factors,
+                marker=".", fc='#1455C0', ec="w", zorder = 2)
 
     # Label each point
     for i, name in enumerate(fluxes_names):
-        ax5.text(fluxes[i], fluxes_times_factors[i]*1.5, name, ha='center', va = "bottom", fontstyle='italic')
+        ax5.text(fluxes[i], fluxes_times_max_factors[i]*2, name, ha='center', va = "bottom", fontstyle='italic')
 
     ax5.annotate("Neoproterozoic fluxes\nlower than modern",
                  xy=(0.35, 0.35), xycoords='axes fraction', xytext=(0.46, 0.2), textcoords='axes fraction',

@@ -1,13 +1,11 @@
 # This code is used to:
-# Scale the TILDAS data based on the accepted values for the reference gases
+# Scale the TILDAS data based on the accepted values of the in-house reference gases
 
-# INPUT:  DP Table S2.csv (replicate data)
-#         DP Table 2.csv (sample info)
+# INPUT:    DP Table S2.csv (replicate data)
+#           DP Table 2.csv (sample info)
 
-# OUTPUT: DP Figure S1a.png
-#         DP Figure S1b.png
-#         DP Figure S1cd.png
-#         DP Table S3.csv (scaled and averaged data)
+# OUTPUT:   DP Figure S1.png
+#           DP Table S3.csv (scaled and averaged data)
 
 # >>>>>>>>>
 
@@ -17,8 +15,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
-# Import functions
+import subprocess
 from functions import *
 
 # Plot parameters
@@ -34,6 +31,8 @@ plt.rcParams['savefig.transparent'] = False
 plt.rcParams['mathtext.default'] = 'regular'
 
 # Define additional functions
+
+# Function to print info for scaled samples
 def print_info(df, d18O_col, Dp17O_col, sample_name):
     gas_subset = df[df["SampleName"].str.contains(sample_name)].copy()
     d18O_mean = gas_subset[d18O_col].mean()
@@ -44,7 +43,7 @@ def print_info(df, d18O_col, Dp17O_col, sample_name):
     print(f"{sample_name}, N = {N_gas}, d18O = {d18O_mean:.3f}(±{d18O_std:.3f})‰, ∆'17O = {Dp17O_mean:.0f}(±{Dp17O_std:.0f}) ppm", end="")
 
 
-# This function applies the acid fractionation factor based on the mineralogy
+# Function to apply the acid fractionation factor based on the mineralogy
 def applyAFF(d18O_CO2, d17O_CO2, mineral):
 
     # Acid fractionation correction
@@ -94,14 +93,14 @@ def scaleData(df, project):
         light_d18O_measured = group[group["SampleName"].str.contains("light")]["d18O"].mean()
         light_d17O_measured = group[group["SampleName"].str.contains("light")]["d17O"].mean()
 
-        # Accepted CO2 values - values calculated in OH2 scale reference.py
+        # Accepted CO2 values - see Bajnai et al. (2024, Chem Geol) for details
         heavy_d18O_accepted = 76.820
         heavy_Dp17O_accepted = -213
-        heavy_d17O_accepted = unprime(heavy_Dp17O_accepted/1000 + 0.528 * prime(heavy_d18O_accepted))
+        heavy_d17O_accepted = d17O(heavy_d18O_accepted, heavy_Dp17O_accepted)
 
         light_d18O_accepted = -1.509
         light_Dp17O_accepted = -141
-        light_d17O_accepted = unprime(light_Dp17O_accepted/1000 + 0.528 * prime(light_d18O_accepted))
+        light_d17O_accepted = d17O(light_d18O_accepted, light_Dp17O_accepted)
 
         # Calculate the scaling factors
         slope_d18O = (light_d18O_accepted - heavy_d18O_accepted) / (light_d18O_measured - heavy_d18O_measured)
@@ -123,19 +122,15 @@ def scaleData(df, project):
                 only_standard[["d18O_AC", "d17O_AC", "Dp17O_AC"]] = only_standard.apply(lambda x: applyAFF(x["d18O_scaled"], x["d17O_scaled"], "calcite"), axis=1, result_type="expand")
                 print_info(only_standard, "d18O_AC", "Dp17O_AC", standard); print("\t<--- scaled + AFF")
 
-            
-
         # Assign colors and markers to samples
         categories = group["SampleName"].unique()
         markers = dict(zip(categories, ["o", "s", "D", "v", "^",
-                                        "<", ">", "p", "P", "*",
-                                        "o", "s", "D", "v", "^",
-                                        "<", ">", "p", "P", "*"]))
+                                        "<", ">", "p", "P", "*"]*4))
         colors = dict(zip(categories, plt.cm.tab20(np.linspace(0, 1, 20))))
 
         # Figure: unscaled Dp17O vs time
 
-        fig, ax = plt.subplots(figsize=(9, 4))
+        _, ax = plt.subplots()
 
         for cat in categories:
             data = group[group["SampleName"] == cat]
@@ -146,12 +141,10 @@ def scaleData(df, project):
                              yerr=group["Dp17OError"],
                              fmt="none", color="#cacaca", zorder=0)
         
-        plt.legend(loc='upper right', bbox_to_anchor=(1.15, 1))
+        ax.legend(loc='upper right', bbox_to_anchor=(1.15, 1))
 
-        plt.title(f"Measurement period: {period}")
-
-        # Axis properties
-        ax.set_ylabel("$\Delta^{\prime 17}$O (ppm, unscaled CO$_2$)")
+        ax.set_title(f"Measurement period: {period}")
+        ax.set_ylabel("$\Delta\prime^{17}$O (ppm, unscaled CO$_2$)")
         ax.set_xlabel("Measurement date")
         ax.text(0.02, 0.98, SuppFig[FigNum], size=14, ha="left", va="top",
                 transform=ax.transAxes, fontweight="bold")
@@ -194,7 +187,6 @@ df = scaleData(pd.read_csv(os.path.join(sys.path[0], "DP Table S1.csv")), "DP")
 # Average the data
 df_avg = average_data(df)
 
-
 # Merge data with sample info
 info = pd.read_csv(os.path.join(sys.path[0], "DP Table 2.csv"))
 df_avg = df_avg.merge(info, on='SampleName')
@@ -202,10 +194,9 @@ df_avg = df_avg.merge(info, on='SampleName')
 # Apply acid fractionation correction
 df_avg[["d18O_AC", "d17O_AC", "Dp17O_AC"]] = df_avg.apply(lambda x: applyAFF(x["d18O_CO2"], x["d17O_CO2"], x["Mineralogy"]), axis=1, result_type="expand")
 
-
 # Print the averaged data
-# print("All sample replicates averaged:")
-# print(df_avg.round({"Dp17O_CO2": 0, "Dp17O_error": 0, "Dp17O_AC": 0}).round(3))
+print("All sample replicates averaged:")
+print(df_avg.round({"Dp17O_CO2": 0, "Dp17O_error": 0, "Dp17O_AC": 0}).round(3))
 
 # Assign sample info and export CSV
 df_avg.to_csv(os.path.join(sys.path[0], "DP Table S2.csv"), index=False)
@@ -252,7 +243,7 @@ for cat in categories:
                  xerr=df_avg["d18O_error"],
                  fmt="none", color="#cacaca", zorder=0)
 
-plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1))
+ax2.legend(loc='upper right', bbox_to_anchor=(1.3, 1))
 
 # Axis properties
 ax2.set_ylim(ylim)
@@ -263,4 +254,6 @@ ax2.text(0.02, 0.98, "d", size=14, ha="left", va="top",
          transform=ax2.transAxes, fontweight="bold")
 
 plt.savefig(os.path.join(sys.path[0], "DP Figure S1cd"))
-plt.close()
+plt.close("all")
+
+subprocess.run([sys.executable, os.path.join(sys.path[0], "combineImage.py")])

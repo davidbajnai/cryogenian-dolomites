@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from curlyBrace import curlyBrace
+import subprocess
 from functions import *
 
 # Plot parameters
@@ -294,10 +295,12 @@ ax1.legend(loc='lower left')
 # Axis properties
 ax1.set_ylim(-105, 5)
 ax1.set_xlim(-15, 45)
-ax1.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW)")
 ax1.set_ylabel("$\Delta\prime^{17}$O (ppm)")
-ax1.text(0.98, 0.98, "a", size=14, ha="right", va="top",
+ax1.set_xlabel("$\delta\prime^{18}$O (‰, VSMOW)")
+ax1.text(0.02, 0.98, "a", size=14, ha="left", va="top",
          transform=ax1.transAxes, fontweight="bold")
 
 plt.savefig(os.path.join(sys.path[0], "DP Figure 2a"))
-plt.close()
+plt.close("all")
+
+subprocess.run([sys.executable, os.path.join(sys.path[0], "combineImage.py")])
